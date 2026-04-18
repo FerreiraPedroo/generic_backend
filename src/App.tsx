@@ -1,89 +1,124 @@
 import { useState } from "react";
 
 import "./App.css";
-import { ConditionRow } from "./modules/condicoes/condicao-linha";
+
+import { ConditionRow } from "./modules/condition/condition-row";
 import { ConditionModal } from "./shared/ui/ConditionModal";
 import { ExpressionModal } from "./shared/ui/ExpressionModal";
 
-type Condition = {
-  id: number;
-  name: string;
-  params: any[];
-};
+import type { Route } from "./shared/components/types/routes.types";
+import type { Condition } from "./shared/components/types/condition.types";
+import type { Expression } from "./shared/components/types/expression.types";
+import { RouteModal } from "./shared/ui/RouteModal";
 
 function App() {
-  const [objects, setObjects] = useState([
-    {
-      id: 1,
-      name: "DB:TABLE:USER",
-      expressions: [
-        { id: 100200, name: "GET FIRST ID", params: [] },
-        { id: 100201, name: "GET USER BY ID" },
-      ],
-      //                 > esse id é o id da função, que será chamada que tem o nome da condition.
-      conditions: [{ id: 1, name: "SELECT USER BY ID", params: ["string"] }],
-    },
-  ]);
-  const [conditions, setConditions] = useState<Condition[]>([
-    {
-      id: 1, // id do options dos objetos, que é uma função que pode ter um parametro ou não.
-      name: "SELECT USER BY ID", // nome da options selecionada,
-      params: [200],
-    },
-  ]);
+  //////////////////////////////////////////////////////////////////////////////
+  // ROUTES ///////////////////////////////////////////////////////////////////
+  const [routes, setRoutes] = useState<Route[]>([]);
+  const [routeSelected, setRouteSelected] = useState(0);
+  const [showRoute, setShowRoute] = useState(false);
+
+  function handleRoute() {
+    setShowRoute(true);
+  }
+
+  function addRoute(route: Route) {
+    const newRoute = structuredClone(routes);
+    newRoute.push(route);
+    setRoutes(newRoute);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // CONDITION ////////////////////////////////////////////////////////////////
+  const [conditionsList, setConditionsList] = useState<Condition[]>([]);
+  const [selectedCondition, setSelectedCondition] = useState<Condition | null>(null);
   const [showCondition, setShowCondition] = useState(false);
+
+  function handleCondition(status: boolean) {
+    setShowCondition(status);
+  }
+  function addCondition(condition: Condition) {
+    handleCondition(false);
+    setSelectedCondition(condition);
+
+    if (condition.params?.length) {
+      handleExpression(true);
+    } else {
+      setConditionsList((cond) => [...cond, { ...condition }]);
+    }
+  }
+
+  ///////////////////////////////////////////////////////////////////////////////
+  // EXPRESSION ////////////////////////////////////////////////////////////////
   const [showExpression, setShowExpression] = useState(false);
 
-  function addCondition() {
-    setShowCondition(true);
-
-    // setConditions((prev) => [
-    //   ...prev,
-    //   {
-    //     id: crypto.randomUUID(),
-    //     field: "New condition",
-    //     operator: "",
-    //     value: "",
-    //   },
-    // ]);
+  function addExpression(operator: string, expression: Expression | string) {
+    if (selectedCondition) {
+      if (typeof expression == "string") {
+        console.log("OK");
+        setConditionsList((cond) => [...cond, { ...selectedCondition, operator, expressions: expression }]);
+        setSelectedCondition(null);
+      } else {
+        setConditionsList((cond) => [...cond, { ...selectedCondition, operator, expressions: [{ ...expression }] }]);
+        setSelectedCondition(null);
+      }
+    }
   }
 
-  function updateCondition(id: string, data: Partial<Condition>) {
-    setConditions((prev) => prev.map((c) => (c.id === id ? { ...c, ...data } : c)));
-  }
-
-  function removeCondition(id: string) {
-    setConditions((prev) => prev.filter((c) => c.id != id));
+  function handleExpression(status: boolean) {
+    setShowExpression(status);
   }
 
   return (
-    <div className="w-full max-w-3xl border border-gray-400 bg-gray-200 text-sm font-sans">
+    <div className="w-full max-w-3xl border border-slate-400 bg-slate-200 text-sm font-sans">
       {/* HEADER */}
-      <div className="bg-gray-300 px-2 py-1 border-b border-gray-400 flex flex-col items-center">
+      <div className="bg-slate-300 px-2 py-1 border-b border-slate-400 flex flex-col items-center">
         <span className="font-semibold">All the events</span>
-        <span className="text-gray-600">All the objects</span>
+        <span className="text-slate-600">All the objects</span>
       </div>
 
-      {/* LIST */}
       <div>
-        {conditions.map((cond, index) => (
-          <ConditionRow
-            key={cond.id}
-            index={index}
-            cond={cond}
-            updateCondition={updateCondition}
-            removeCondition={removeCondition}
-          />
+        {routes.map((route) => (
+          <>
+            <div>{route.name}</div>
+            {conditionsList.map((cond, index) => (
+              <ConditionRow
+                key={cond.id}
+                index={index}
+                cond={cond}
+                // updateCondition={updateCondition}
+                // removeCondition={removeCondition}
+              />
+            ))}
+          </>
         ))}
+      </div>
 
-        {/* ADD ROW */}
-        <div onClick={addCondition} className="px-2 py-1 cursor-pointer hover:bg-gray-300 border-t border-gray-300">
+      {routes.length ? (
+        <div
+          onClick={() => handleCondition(true)}
+          className="px-2 py-1 cursor-pointer hover:bg-gray-300 border-t border-gray-300"
+        >
           + New condition
         </div>
-      </div>
+      ) : (
+        <div
+          onClick={() => handleRoute()}
+          className="px-2 py-1 cursor-pointer hover:bg-gray-300 border-t border-gray-300"
+        >
+          + New Route
+        </div>
+      )}
 
-      {showCondition && <ConditionModal objects={objects} setShow={setShowCondition} />}
-      {showExpression && <ExpressionModal objects={objects} setShow={setShowCondition} />}
+      {showRoute && <RouteModal addRoute={addRoute} setShow={handleRoute} />}
+      {showCondition && <ConditionModal addCondition={addCondition} setShow={handleCondition} />}
+      {showExpression && (
+        <ExpressionModal
+          setShow={setShowExpression}
+          addExpression={addExpression}
+          selectedCondition={selectedCondition}
+        />
+      )}
     </div>
   );
 }

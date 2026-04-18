@@ -1,19 +1,15 @@
 import { useState } from "react";
-import { Dropdown } from "../components/Dropdown";
+import { objectsList } from "../components/Objects/indexObject";
 
-export function ConditionModal({ objects, setShow }: any) {
-  console.log(objects);
+export function ConditionModal({ addCondition, setShow }: any) {
+  const [objects] = useState(objectsList);
+
   return (
     <div className="absolute top-0 left-0 w-full h-full bg-white/75 flex justify-center">
       <div className="relative w-150 h-100 flex flex-col bg-gray-200 border border-gray-400 shadow-md shad rounded-md top-1/10">
-        <div className="w-full h-12 rounded-t-md"></div>
-
+        <div className="w-full h-12 rounded-t-md p-4 text-xl ">Objetos</div>
         <div className=" grow m-4 p-1 border-3 border-t-stone-600 border-l-stone-600 border-r-stone-50 border-b-stone-50">
-          <div className="flex flex-wrap gap-2">
-            {objects.map((obj) => (
-              <Dropdown value={obj.name} conditions={obj.conditions} onSetParam={(v) => null} />
-            ))}
-          </div>
+          <div className="flex flex-wrap gap-2">{objects.map((obj) => obj({ addCondition, type: "condition" }))}</div>
         </div>
 
         <div className="w-full h-14 flex justify-end pb-4 px-4 rounded-b-md ">
