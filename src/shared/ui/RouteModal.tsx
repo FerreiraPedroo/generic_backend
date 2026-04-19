@@ -7,39 +7,57 @@ export function RouteModal({ setShow, selectedCondition, addExpression }: any) {
   const [status, setStatus] = useState<string>("ERROR");
 
   function handleRoute(url: string) {
-    const urlParamIndex = url.indexOf(":");
-    /**
-     *
-     *
-     *
-     *
-     *
-     *
-     * REGEX
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     */
-    console.log([...url.matchAll(/:/g)]);
-
-    if (urlParamIndex !== -1) {
-      const leftChar = url[urlParamIndex - 1];
-
-      if (leftChar !== "/") {
-        console.log("ERRO DE PARAMETRO \\");
-        setStatus("ERROR");
-        return;
-      }
-      setStatus("OK");
-    } else {
-      console.log("SEM PARAMETRO");
+    // START URL ROUTE WITH "/"
+    if (url.slice(0, 1) !== "/") {
+      setStatus("ERROR");
+      return;
     }
+
+    // FIND PARAMS
+    const findParam = [...url.matchAll(/:/g)];
+
+    const paramList = [];
+    const totalLength = url.length;
+
+    for (let i = 0; i < findParam.length; i++) {
+      const paramsFound = findParam[i];
+
+      const paramSliced = paramsFound.input.slice(paramsFound.index, totalLength);
+      const startSlash = paramsFound.input.slice(paramsFound.index - 1, paramsFound.index);
+      const indexEndSlash = paramSliced.indexOf("/");
+
+      console.log(paramSliced, startSlash, indexEndSlash);
+
+      // VERIFICA SENÃO É O ULTIMO PARAMETRO
+      if (findParam.length > 1 && i + 1 !== findParam.length) {
+        // INICIA E TERMINA COM '/', SENDO QUE OPRIMEIRO É VERIFICADO COM O 'SLASH' E O SEGUNDO PELA PROCURA
+        if (startSlash !== "/" || indexEndSlash === -1) {
+          setStatus("ERROR");
+          console.log("ERROR - Start or end param error");
+          break;
+        }
+        const param = paramSliced.slice(0, indexEndSlash);
+        paramList.push(param);
+
+        continue;
+      }
+
+      /**
+       *
+       * verificar se tem: no meio do parametro
+       *
+       *
+       */
+      if (startSlash === "/") {
+        const param = paramSliced.slice(0, indexEndSlash);
+        paramList.push(param);
+      }
+    }
+
+    console.log(paramList);
+
+    setStatus("ERROR");
+    setStatus("OK");
   }
 
   function handleConfirm() {}
