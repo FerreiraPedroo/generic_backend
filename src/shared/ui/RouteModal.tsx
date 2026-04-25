@@ -3,61 +3,88 @@ import React, { useState } from "react";
 export function RouteModal({ setShow, selectedCondition, addExpression }: any) {
   const [operator, setOperator] = useState<string>("equal");
   const [route, setRoute] = useState<boolean>(false);
-  const [param, setParam] = useState<boolean>(false);
+  const [params, setParams] = useState<string[]>([]);
+  const [queries, setQueries] = useState<string[]>([]);
   const [status, setStatus] = useState<string>("ERROR");
 
   function handleRoute(url: string) {
-    // START URL ROUTE WITH "/"
-    if (url.slice(0, 1) !== "/") {
-      setStatus("ERROR");
-      return;
-    }
+    function params() {
+      // A ROTA DEVE INICIAR COM "/"
+      if (url.slice(0, 1) !== "/") {
+        setParams([]);
+        setStatus("ERROR");
+        return;
+      }
 
-    // FIND PARAMS
-    const findParam = [...url.matchAll(/:/g)];
+      // ENCONTRA TODOS OS PARAMETROS DA ROTA
+      const findParam = [...url.matchAll(/\/:/g)];
+      const paramList = [];
 
-    const paramList = [];
-    const totalLength = url.length;
+      for (let i = 0; i < findParam.length; i++) {
+        const paramsFound = findParam[i];
 
-    for (let i = 0; i < findParam.length; i++) {
-      const paramsFound = findParam[i];
+        const paramSliced = paramsFound.input.slice(paramsFound.index, paramsFound.input.length);
+        const startSlash = paramsFound.input.slice(paramsFound.index, paramsFound.index + 2);
+        const indexEndSlash = paramSliced.indexOf("/", 1);
 
-      const paramSliced = paramsFound.input.slice(paramsFound.index, totalLength);
-      const startSlash = paramsFound.input.slice(paramsFound.index - 1, paramsFound.index);
-      const indexEndSlash = paramSliced.indexOf("/");
-
-      console.log(paramSliced, startSlash, indexEndSlash);
-
-      // VERIFICA SENÃO É O ULTIMO PARAMETRO
-      if (findParam.length > 1 && i + 1 !== findParam.length) {
-        // INICIA E TERMINA COM '/', SENDO QUE OPRIMEIRO É VERIFICADO COM O 'SLASH' E O SEGUNDO PELA PROCURA
-        if (startSlash !== "/" || indexEndSlash === -1) {
+        if (paramSliced.trim().includes(" ")) {
+          setParams([]);
           setStatus("ERROR");
-          console.log("ERROR - Start or end param error");
-          break;
+          return;
         }
-        const param = paramSliced.slice(0, indexEndSlash);
-        paramList.push(param);
 
-        continue;
+        // VERIFICA SENÃO É O ULTIMO PARAMETRO
+        if (i < findParam.length - 1) {
+          // INICIA E TERMINA COM '/', SENDO QUE O PRIMEIRO É VERIFICADO COM O 'SLASH' E O SEGUNDO PELO INDEX
+          if (startSlash !== "/:" || indexEndSlash === -1) {
+            setParams([]);
+            setStatus("ERROR");
+            return;
+          }
+
+          const param = paramSliced.slice(0, indexEndSlash);
+          paramList.push(param);
+
+          continue;
+        }
+
+        // ULTIMO PARAMETRO
+        if (startSlash === "/:") {
+          let param;
+
+          // SE O PARAMETRO TERMINA COM "/"
+          if (paramSliced.slice(1).indexOf("/") !== -1) {
+            param = paramSliced.slice(0, paramSliced.slice(1).indexOf("/") + 1);
+          } else {
+            param = paramSliced.slice(0);
+          }
+
+          paramList.push(param);
+        }
       }
 
-      /**
-       *
-       * verificar se tem: no meio do parametro
-       *
-       *
-       */
-      if (startSlash === "/") {
-        const param = paramSliced.slice(0, indexEndSlash);
-        paramList.push(param);
-      }
+      setParams(paramList);
+      setStatus("OK");
     }
 
-    console.log(paramList);
+    function queries() {
+      const findQuery = [...url.matchAll(/\?/g)];
 
-    setStatus("ERROR");
-    setStatus("OK");
+      if (!findQuery.length) {
+        return;
+      }
+
+      const querySliced = findQuery[0].input.slice(findQuery[0].index + 1, findQuery[0].input.length);
+
+      for(let i = 0; i < querySliced.length; i++){
+
+      }
+      
+      console.log(findQuery, querySliced);
+    }
+
+    params();
+    queries();
   }
 
   function handleConfirm() {}
@@ -72,13 +99,13 @@ export function RouteModal({ setShow, selectedCondition, addExpression }: any) {
         <div className="w-full px-4 pt-4 pb-2 items-center gap-1 ">
           <div className="flex gap-4 items-center pb-4 font-medium text-lg">
             <div className="min-w-22 flex items-center text-lg">
-              <span>Route URL</span>
+              <span>URL route</span>
             </div>
             <input
               type="text"
               // value={param}
               onChange={(e) => handleRoute(e.target.value)}
-              className="w-full rounded-sm bg-white p-2 outline-0"
+              className="w-full rounded-sm bg-white px-2 py-1.5 outline-0"
             />
             {/* <span className="bg-yellow-300  text-xs px-2 py-1 rounded-full hover:cursor-pointer">?</span> */}
           </div>
@@ -106,12 +133,19 @@ export function RouteModal({ setShow, selectedCondition, addExpression }: any) {
           </div>
         </div>
 
-        <div className="flex grow mx-4 py-2 px-4 border-3 border-t-stone-50 border-l-stone-50 border-r-stone-600 border-b-stone-600">
-          <div className="gap-2 min-w-11/20">
+        <div className="flex grow mx-4 py-2 px-4 gap-6 border-3 border-t-stone-50 border-l-stone-50 border-r-stone-600 border-b-stone-600">
+          <div className="gap-2 min-w-1/2">
             <span className="text-md font-bold">Params</span>
-            <div className=""></div>
+            <div className="space-y-1.5">
+              {params.map((param, index) => (
+                <p key={param} className="px-2 py-0.5 bg-slate-200 rounded-md">
+                  <span className="pr-1">{index} </span>
+                  {param}
+                </p>
+              ))}
+            </div>
           </div>
-          <div className="min-w-9/20">
+          <div className="min-w-1/2">
             <span className="text-md font-bold">Query</span>
             <div className=""></div>
           </div>
