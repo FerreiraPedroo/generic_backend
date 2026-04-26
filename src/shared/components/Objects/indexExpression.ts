@@ -1,4 +1,4 @@
-import { databaseExpression } from "./database-object/database-expression";
-import { serverExpression } from "./server-object/server-expression";
+import { databaseExpressions } from "./database-object/database-expressions";
+import { serverExpressions } from "./server-object/server-expressions";
 
-export const expressionList = [serverExpression, databaseExpression];
+export const expressionList = [serverExpressions, databaseExpressions];

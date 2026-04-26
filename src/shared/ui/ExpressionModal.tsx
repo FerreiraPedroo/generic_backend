@@ -3,7 +3,7 @@ import { objectsList } from "../components/Objects/indexObject";
 import type { Expression } from "../components/types/expression.types";
 import { expressionList } from "../components/Objects/indexExpression";
 
-export function ExpressionModal({ setShow, selectedCondition, addExpression }: any) {
+export function ExpressionModal({ setShow, addExpression, selectedCondition }: any) {
   const [objects] = useState(objectsList);
 
   const [expression, setExpression] = useState<Expression | null>();
@@ -88,7 +88,7 @@ export function ExpressionModal({ setShow, selectedCondition, addExpression }: a
 
         <div className="grow m-4 p-1 border-3 border-t-stone-600 border-l-stone-600 border-r-stone-50 border-b-stone-50">
           <div className="flex flex-wrap gap-2">
-            {objects.map((obj) => obj({ handleExpression, type: "expression" }))}
+            {objects.map((obj) => obj.object({ handleExpression, type: "expression" }))}
           </div>
         </div>
 

@@ -1,7 +1,7 @@
 import { icons } from "../../../../assets/img";
 import type { Condition } from "../../types/condition.types";
 
-export const serverCondition: Condition[] = [
+export const serverConditions: Condition[] = [
   {
     id: 100,
     name: "SERVER IS UP",

@@ -1,10 +1,16 @@
 import React, { useState } from "react";
+import type { Route, RouteWithoutId } from "../components/types/routes.types";
 
-export function RouteModal({ setShow, selectedCondition, addExpression }: any) {
-  const [operator, setOperator] = useState<string>("equal");
-  const [route, setRoute] = useState<boolean>(false);
+export function RouteModal({
+  setShow,
+  addRoute,
+}: {
+  setShow: (show: boolean) => void;
+  addRoute: (route: RouteWithoutId) => void;
+}) {
+  const [route, setRoute] = useState<string>("");
   const [params, setParams] = useState<string[]>([]);
-  const [queries, setQueries] = useState<string[]>([]);
+  const [queries, setQueries] = useState<{ key: string; value: string }[]>([]);
   const [status, setStatus] = useState<string>("ERROR");
 
   function handleRoute(url: string) {
@@ -33,6 +39,11 @@ export function RouteModal({ setShow, selectedCondition, addExpression }: any) {
           return;
         }
 
+        // VERIFICA SE O PARAM SÓ TEM '/:' SÓ PASSA SE TIVER ALGUM CARACTERE A MAIS '/:a'.
+        if (paramSliced.length <= 2) {
+          continue;
+        }
+
         // VERIFICA SENÃO É O ULTIMO PARAMETRO
         if (i < findParam.length - 1) {
           // INICIA E TERMINA COM '/', SENDO QUE O PRIMEIRO É VERIFICADO COM O 'SLASH' E O SEGUNDO PELO INDEX
@@ -42,7 +53,7 @@ export function RouteModal({ setShow, selectedCondition, addExpression }: any) {
             return;
           }
 
-          const param = paramSliced.slice(0, indexEndSlash);
+          const param = paramSliced.slice(2, indexEndSlash);
           paramList.push(param);
 
           continue;
@@ -54,9 +65,9 @@ export function RouteModal({ setShow, selectedCondition, addExpression }: any) {
 
           // SE O PARAMETRO TERMINA COM "/"
           if (paramSliced.slice(1).indexOf("/") !== -1) {
-            param = paramSliced.slice(0, paramSliced.slice(1).indexOf("/") + 1);
+            param = paramSliced.slice(2, paramSliced.slice(1).indexOf("/") + 1);
           } else {
-            param = paramSliced.slice(0);
+            param = paramSliced.slice(2, paramSliced.length);
           }
 
           paramList.push(param);
@@ -76,18 +87,29 @@ export function RouteModal({ setShow, selectedCondition, addExpression }: any) {
 
       const querySliced = findQuery[0].input.slice(findQuery[0].index + 1, findQuery[0].input.length);
 
-      for(let i = 0; i < querySliced.length; i++){
-
+      for (let i = 0; i < querySliced.length; i++) {
+        console.log(querySliced[i]);
       }
-      
+
       console.log(findQuery, querySliced);
     }
 
     params();
     queries();
+    setRoute(url);
   }
 
-  function handleConfirm() {}
+  function handleConfirm() {
+    addRoute({
+      url: route,
+      icon: "",
+      params,
+      queries,
+      actions: [],
+      conditions: [],
+    });
+    setShow(false);
+  }
 
   return (
     <div className="fixed top-0 left-0 w-full h-full bg-slate-500/50 flex justify-center z-100">
@@ -103,7 +125,7 @@ export function RouteModal({ setShow, selectedCondition, addExpression }: any) {
             </div>
             <input
               type="text"
-              // value={param}
+              value={route}
               onChange={(e) => handleRoute(e.target.value)}
               className="w-full rounded-sm bg-white px-2 py-1.5 outline-0"
             />
@@ -111,20 +133,6 @@ export function RouteModal({ setShow, selectedCondition, addExpression }: any) {
           </div>
 
           <div className="flex justify-end align-center">
-            {/* <div className="w-full flex gap-4 items-center font-medium text-md">
-              <div className="min-w-22 flex items-center">
-                <span>Params</span>
-              </div>
-
-              <select
-                className="bg-slate-900 py-0.5 px-2 text-white outline-0 rounded-sm text-sm"
-                onChange={(e) => handleOperator(e)}
-              >
-                <option value="true">Yes</option>
-                <option value="false">No</option>
-              </select>
-            </div> */}
-
             <div
               className={`text-center justify-end min-w-50 border-2 border-t-neutral-500 border-l-neutral-500 border-b-neutral-300 border-r-neutral-300 font-medium uppercase ${status == "ERROR" && "bg-red-500  text-red-100"} ${status == "OK" && "bg-green-500 text-green-950 "}`}
             >

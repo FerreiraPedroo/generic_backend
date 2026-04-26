@@ -1,4 +1,3 @@
-import { ServerObject } from "./server-object/ServerObject";
-import { DatabaseObject } from "./database-object/DatabaseObject";
+import { serverObject } from "./server-object/serverObject";
 
-export const objectsList = [ServerObject];
+export const objectsList = [serverObject];

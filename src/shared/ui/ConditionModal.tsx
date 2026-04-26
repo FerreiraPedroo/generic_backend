@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { objectsList } from "../components/Objects/indexObject";
+import type { Condition } from "../components/types/condition.types";
 
-export function ConditionModal({ addCondition, setShow }: any) {
+export function ConditionModal({
+  addCondition,
+  setShow,
+}: {
+  addCondition: (condition: Condition) => void;
+  setShow: (show: boolean) => void;
+}) {
   const [objects] = useState(objectsList);
 
   return (
@@ -9,7 +16,9 @@ export function ConditionModal({ addCondition, setShow }: any) {
       <div className="relative w-150 h-100 flex flex-col bg-gray-200 border border-gray-400 shadow-md shad rounded-md top-1/10">
         <div className="w-full h-12 rounded-t-md p-4 text-xl ">Objetos</div>
         <div className=" grow m-4 p-1 border-3 border-t-stone-600 border-l-stone-600 border-r-stone-50 border-b-stone-50">
-          <div className="flex flex-wrap gap-2">{objects.map((obj) => obj({ addCondition, type: "condition" }))}</div>
+          <div className="flex flex-wrap gap-2">
+            {objects.map((obj) => obj.object({ addCondition, type: "condition" }))}
+          </div>
         </div>
 
         <div className="w-full h-14 flex justify-end pb-4 px-4 rounded-b-md ">

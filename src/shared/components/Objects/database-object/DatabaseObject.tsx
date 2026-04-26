@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { databaseCondition } from "./database-conditions";
-import { databaseExpression } from "./database-expression";
+import { databaseConditions } from "./database-conditions";
+import { databaseExpressions } from "./database-expressions";
 import { icons } from "../../../../assets/img";
 
 export function DatabaseObject({ addItem, type }: { addItem: any; type: string }) {
@@ -10,8 +10,8 @@ export function DatabaseObject({ addItem, type }: { addItem: any; type: string }
     id: 1,
     name: "DATABASE",
     icon: icons.database,
-    conditions: databaseCondition,
-    expressions: databaseExpression,
+    conditions: databaseConditions,
+    expressions: databaseExpressions,
   });
 
   return (
@@ -33,7 +33,7 @@ export function DatabaseObject({ addItem, type }: { addItem: any; type: string }
               // onClick={onSetParam()}
               className="w-30 px-2 py-1 hover:bg-blue-500 hover:text-white cursor-pointer text-xs"
             >
-              <img src={condition.database}/>
+              <img src={condition.database} />
               {condition.name}
             </div>
           ))}

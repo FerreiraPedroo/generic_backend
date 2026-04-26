@@ -1,6 +1,6 @@
 import { icons } from "../../../../assets/img";
 
-export const databaseExpression = [
+export const databaseExpressions = [
   {
     id: 100100,
     menuName: "FIND BY ID",

@@ -1,7 +1,7 @@
 import { icons } from "../../../../assets/img";
 import type { Expression } from "../../types/expression.types";
 
-export const serverExpression: Expression[] = [
+export const serverExpressions: Expression[] = [
   {
     id: 200200,
     menuName: "GET SERVER IP",
