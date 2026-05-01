@@ -2,16 +2,20 @@ import { useState } from "react";
 
 import "./App.css";
 
-import { ConditionRow } from "./modules/condition/condition-row";
-import { ConditionModal } from "./shared/ui/ConditionModal";
-import { ExpressionModal } from "./shared/ui/ExpressionModal";
-
 import type { Route, RouteWithoutId } from "./shared/components/types/routes.types";
 import type { Condition } from "./shared/components/types/condition.types";
 import type { Expression } from "./shared/components/types/expression.types";
+import type { Action } from "./shared/components/types/actions.types";
+
+import { ConditionRow } from "./modules/condition/condition-row";
+import { ConditionModal } from "./shared/ui/ConditionModal";
+import { ExpressionModal } from "./shared/ui/ExpressionModal";
+import { Actions } from "./shared/components/Objects/server-object/Server";
+import { ActionsInCell } from "./shared/ui/ActionsInCell";
+import { ActionExpressionModal } from "./shared/ui/ActionExpressionModal";
+
 import { RouteModal } from "./shared/ui/RouteModal";
 import { objectsList } from "./shared/components/Objects/indexObject";
-import { ActionsInCell } from "./shared/ui/ActionsInCell";
 
 type CellActions = { objectId: number; routeId: number; conditionId: number | null; type: string };
 
@@ -46,6 +50,32 @@ function App() {
     });
 
     setRoutes(newRoutes);
+    setSelectedCondition(null);
+    setRouteUrlSelected("");
+    setShowExpression(false);
+    setShowCondition(false);
+  }
+  function addRouteAction(routeId: number, conditionId: number | null, action: Action) {
+    const routesCopy = structuredClone(routes);
+
+    const newRoutes = routesCopy.map((route: Route) => {
+      if (routeId == route.id) {
+        if (conditionId) {
+          route.conditions = route.conditions.map((condition: Condition) => {
+            if (condition.id == conditionId) {
+              condition.actions.push({ ...action });
+            }
+            return condition;
+          });
+        } else {
+          route.actions.push({ ...action });
+        }
+      }
+      return route;
+    });
+
+    setRoutes(newRoutes);
+
     setSelectedCondition(null);
     setRouteUrlSelected("");
     setShowExpression(false);
@@ -91,12 +121,29 @@ function App() {
   // EXPRESSION ////////////////////////////////////////////////////////////////
   const [showExpression, setShowExpression] = useState(false);
 
-  function addExpression(operator: string, expression: Expression | string) {
+  function addExpressionToCondition(operator: string, expression: Expression | string) {
     if (selectedCondition) {
       if (typeof expression == "string") {
         addRouteCondition(routeUrlSelected, { ...selectedCondition, operator, expressions: expression });
       } else {
         addRouteCondition(routeUrlSelected, { ...selectedCondition, operator, expressions: [{ ...expression }] });
+      }
+    }
+  }
+  function addExpressionToAction(operator: string, expression: Expression | string) {
+    if (selectedAction) {
+      if (typeof expression == "string") {
+        addRouteAction(selectedAction.routeId, selectedAction.conditionId, {
+          ...selectedAction.action,
+          operator,
+          expressions: expression,
+        });
+      } else {
+        addRouteAction(selectedAction.routeId, selectedAction.conditionId, {
+          ...selectedAction.action,
+          operator,
+          expressions: [{ ...expression }],
+        });
       }
     }
   }
@@ -107,10 +154,38 @@ function App() {
   ///////////////////////////////////////////////////////////////////////////////
   // OBJECTS - ACTIONS /////////////////////////////////////////////////////////
   const [objects, setObjects] = useState(objectsList);
-  const [showCellActions, setShowCellActions] = useState<CellActions | null>(null);
 
-  function handleMouse(route: CellActions | null) {
+  const [showActionExpression, setShowActionExpression] = useState(false);
+  const [showCellActions, setShowCellActions] = useState<CellActions | null>(null);
+  const [actionMenu, setActionMenu] = useState<CellActions | null>(null);
+
+  const [selectedAction, setSelectedAction] = useState<{
+    routeId: number;
+    conditionId: number | null;
+    action: Action;
+  } | null>(null);
+
+  function handleActionHover(route: CellActions | null) {
     setShowCellActions(route);
+  }
+  function handleActionMenu(menu: CellActions | null) {
+    setActionMenu(menu);
+  }
+  function handleAction() {
+    setShowActionExpression(false);
+    setShowCellActions(null);
+    setActionMenu(null);
+    setSelectedAction(null);
+  }
+
+  function addAction(routeId: number, conditionId: number | null, action: Action) {
+    if (action.params?.length) {
+      setSelectedAction({ routeId, conditionId, action });
+      setShowActionExpression(true);
+    } else {
+      addRouteAction(routeId, conditionId, action);
+      handleAction();
+    }
   }
 
   return (
@@ -172,7 +247,7 @@ function App() {
       <div className="bg-white">
         <div className="min-w-20 min-h-14 max-h-14">
           {objects.map((obj) => (
-            <div className="w-20">
+            <div key={obj.name} className="w-20">
               <div key={obj.name} className="w-20 relative">
                 <div className="h-14  flex flex-col justify-center items-center bg-gray-300 border border-slate-400">
                   <img src={obj.icon} className="min-w-8 min-h-8" />
@@ -185,51 +260,113 @@ function App() {
                   {routes.map((route) => (
                     <div key={route.id}>
                       <div
-                        onClick={() => null}
-                        onMouseEnter={() =>
-                          handleMouse({ objectId: obj.id, routeId: route.id, conditionId: null, type: "ROUTE" })
+                        onAuxClick={() =>
+                          handleActionMenu({ objectId: obj.id, routeId: route.id, conditionId: null, type: "ROUTE" })
                         }
-                        onMouseLeave={() => handleMouse(null)}
+                        onMouseEnter={() =>
+                          handleActionHover({ objectId: obj.id, routeId: route.id, conditionId: null, type: "ROUTE" })
+                        }
+                        onMouseLeave={() => {
+                          handleActionHover(null);
+                          handleActionMenu(null);
+                        }}
                         className="h-14 flex flex-col justify-center items-center bg-white border border-slate-400 border-t-transparent cursor-pointer"
                       >
-                        {route.actions.length ? `${route.actions.length} actions` : ""}
+                        {route.actions.length ? `✓ ${route.actions.length} actions` : ""}
+
+                        {/* DROPDOWN ACTIONS */}
+                        {actionMenu &&
+                          actionMenu.type == "ROUTE" &&
+                          obj.id == actionMenu.objectId &&
+                          actionMenu.routeId == route.id &&
+                          actionMenu.conditionId == null && (
+                            <div className={`relative w-60 border border-slate-600 bg-slate-200 p-2 rounded-md`}>
+                              <Actions routeId={route.id} conditionId={null} addAction={addAction} />
+                            </div>
+                          )}
+
+                        {/* ACTIONS LIST IN CELL */}
                         {showCellActions &&
                           showCellActions.type == "ROUTE" &&
-                          // route.actions.length != 0 &&
-                          // obj.id == showCellActions.objectId &&
+                          route.actions.length != 0 &&
+                          actionMenu == null &&
+                          obj.id == showCellActions.objectId &&
                           showCellActions.routeId == route.id &&
                           showCellActions.conditionId == null && (
-                            <div className={`absolute min-w-36 border-2 border-slate-600 p-2 bg-sky-400 rounded-md`}>
+                            <div
+                              className={`absolute top-12 min-w-80 border-2 border-slate-500 bg-slate-200 rounded-md`}
+                            >
                               <ActionsInCell actions={route.actions} />
                             </div>
                           )}
                       </div>
 
+                      {route.conditions.length == 0 && (
+                        <div className="h-12 flex flex-col justify-center items-center bg-white border border-slate-400 border-t-transparent text-stone-200 text-4xl pb-2">
+                          ⊘
+                        </div>
+                      )}
+
                       {route.conditions.map((condition) => (
                         <div
                           key={`${route.id}/${condition.id}`}
-                          onClick={() => null}
-                          onMouseEnter={() =>
-                            handleMouse({
+                          onAuxClick={() =>
+                            handleActionMenu({
                               objectId: obj.id,
                               routeId: route.id,
                               conditionId: condition.id,
-                              type: "ROUTE",
+                              type: "CONDITION",
                             })
                           }
+                          onMouseEnter={() =>
+                            handleActionHover({
+                              objectId: obj.id,
+                              routeId: route.id,
+                              conditionId: condition.id,
+                              type: "CONDITION",
+                            })
+                          }
+                          onMouseLeave={() => {
+                            handleActionHover(null);
+                            handleActionMenu(null);
+                          }}
                           className="h-12 flex flex-col justify-center items-center bg-white border border-slate-400 border-t-transparent cursor-pointer"
                         >
-                          {route.actions.length ? `${route.actions.length} actions` : ""}
+                          {condition.actions.length ? `✓ ${condition.actions.length} actions` : ""}
+
+                          {/* DROPDOWN ACTIONS */}
+                          {actionMenu &&
+                            actionMenu.type == "CONDITION" &&
+                            obj.id == actionMenu.objectId &&
+                            actionMenu.routeId == route.id &&
+                            actionMenu.conditionId == condition.id && (
+                              <div className={`relative w-60 border border-slate-600 bg-slate-200 p-2 rounded-md`}>
+                                <Actions routeId={route.id} conditionId={condition.id} addAction={addAction} />
+                              </div>
+                            )}
+
+                          {/* ACTIONS LIST IN CELL */}
                           {showCellActions &&
                             showCellActions.type == "CONDITION" &&
-                            condition.actions.length != 0 &&
+                            condition.actions.length &&
+                            actionMenu == null &&
                             obj.id == showCellActions.objectId &&
                             showCellActions.routeId == route.id &&
                             showCellActions.conditionId == condition.id && (
-                              <div className="min-w-16 min-h-5 border-2 bg-sky-400"></div>
+                              <div
+                                className={`absolute top-22 min-w-80 border-2 border-slate-500 bg-slate-200 rounded-md`}
+                              >
+                                <ActionsInCell actions={condition.actions} />
+                              </div>
                             )}
                         </div>
                       ))}
+
+                      {route.conditions.length >= 1 && (
+                        <div className="h-12 flex flex-col justify-center items-center bg-white border border-slate-400 border-t-transparent text-stone-200 text-4xl pb-2">
+                          ⊘
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -244,8 +381,15 @@ function App() {
       {showExpression && (
         <ExpressionModal
           setShow={setShowExpression}
-          addExpression={addExpression}
+          addExpression={addExpressionToCondition}
           selectedCondition={selectedCondition}
+        />
+      )}
+      {showActionExpression && (
+        <ActionExpressionModal
+          setShow={setShowActionExpression}
+          addExpression={addExpressionToAction}
+          selectedAction={selectedAction && selectedAction.action}
         />
       )}
     </div>

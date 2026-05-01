@@ -9,10 +9,10 @@ import type { Action } from "../../types/actions.types";
 
 export function Conditions({
   setIsOpenMenu,
-  handleConditionSelected,
+  handleAddCondition,
 }: {
   setIsOpenMenu: (value: boolean) => void;
-  handleConditionSelected: (condition: Condition) => void;
+  handleAddCondition: (condition: Condition) => void;
 }) {
   return (
     <div className={`w-20 relative`}>
@@ -23,7 +23,7 @@ export function Conditions({
         {serverConditions.map((condition: Condition) => (
           <div
             key={condition.name}
-            onClick={() => handleConditionSelected(condition)}
+            onClick={() => handleAddCondition(condition)}
             className="w-30 px-2 py-1 hover:bg-blue-600 hover:text-white hover:border-blue-300 cursor-pointer text-sm rounded-sm"
           >
             {condition.name}
@@ -36,10 +36,10 @@ export function Conditions({
 
 export function Expressions({
   setIsOpenMenu,
-  handleExpressionSelected,
+  handleAddExpression,
 }: {
   setIsOpenMenu: (value: boolean) => void;
-  handleExpressionSelected: (expression: string) => void;
+  handleAddExpression: (expression: string) => void;
 }) {
   return (
     <div
@@ -49,7 +49,7 @@ export function Expressions({
       {serverExpressions.map((expression: Expression) => (
         <div
           key={expression.menuName}
-          onClick={() => handleExpressionSelected(expression.expressionName)}
+          onClick={() => handleAddExpression(expression.expressionName)}
           className="w-30 px-2 py-1 hover:bg-blue-500 hover:text-white cursor-pointer text-xs"
         >
           {expression.menuName}
@@ -62,24 +62,20 @@ export function Expressions({
 export function Actions({
   routeId,
   conditionId,
-  handleActionSelected,
+  addAction,
 }: {
   routeId: number;
-  condition: number;
-  handleExpressionSelected: (expression: string) => void;
+  conditionId: number | null;
+  addAction: (routeId: number, conditionId: number | null, action: Action) => void;
 }) {
-  const [isOpenMenu, setIsOpenMenu] = useState(false);
-
   return (
-    <div
-      className="absolute top-6 z-10 bg-blue-100 border border-gray-400 shadow"
-      onMouseLeave={() => setIsOpenMenu(false)}
-    >
+    <div className="z-10 bg-slate-200 shadow">
+      <p className="p-1 m-1 text-center border-b border-b-slate-500">Add action</p>
       {serverActions.map((action: Action) => (
         <div
           key={action.name}
-          // onClick={() => handleExpressionSelected(expression.expressionName)}
-          className="w-30 px-2 py-1 hover:bg-blue-500 hover:text-white cursor-pointer text-xs"
+          onClick={() => addAction(routeId, conditionId, action)}
+          className="px-2 py-1 hover:bg-blue-500 hover:text-white cursor-pointer text-xs"
         >
           {action.name}
         </div>
@@ -99,11 +95,11 @@ export function Server({
 }) {
   const [isOpenMenu, setIsOpenMenu] = useState(false);
 
-  const handleConditionSelected = (condition: Condition) => {
+  const handleAddCondition = (condition: Condition) => {
     addCondition({ ...condition });
     setIsOpenMenu(false);
   };
-  const handleExpressionSelected = (expression: string) => {
+  const handleAddExpression = (expression: string) => {
     handleExpression(expression);
     setIsOpenMenu(false);
   };
@@ -121,12 +117,12 @@ export function Server({
 
       {/* // MENU CONDITION */}
       {isOpenMenu && type == "condition" && (
-        <Conditions handleConditionSelected={handleConditionSelected} setIsOpenMenu={setIsOpenMenu} />
+        <Conditions handleAddCondition={handleAddCondition} setIsOpenMenu={setIsOpenMenu} />
       )}
 
       {/* // MENU EXPRESSION */}
       {isOpenMenu && type == "expression" && (
-        <Expressions handleExpressionSelected={handleExpressionSelected} setIsOpenMenu={setIsOpenMenu} />
+        <Expressions handleAddExpression={handleAddExpression} setIsOpenMenu={setIsOpenMenu} />
       )}
     </div>
   );

@@ -1,17 +1,17 @@
 import React, { useState } from "react";
 import { objectsList } from "../components/Objects/indexObject";
 import type { Expression } from "../components/types/expression.types";
+import type { Action } from "../components/types/actions.types";
 import { expressionList } from "../components/Objects/indexExpression";
-import type { Condition } from "../components/types/condition.types";
 
-export function ExpressionModal({
+export function ActionExpressionModal({
   setShow,
   addExpression,
-  selectedCondition,
+  selectedAction,
 }: {
   setShow: (value: boolean) => void;
-  addExpression: (value: string, expression: Expression | string) => void;
-  selectedCondition: Condition | null;
+  addExpression: (operator: string, expression: Expression | string) => void;
+  selectedAction: Action | null;
 }) {
   const [objects] = useState(objectsList);
 
@@ -58,7 +58,7 @@ export function ExpressionModal({
 
   return (
     <div className="fixed top-0 left-0 w-full h-full bg-slate-500/50 flex justify-center z-100">
-      {selectedCondition && (
+      {selectedAction && (
         <div className="relative w-150 h-100 flex flex-col bg-slate-400 border border-gray-600 shadow-md shad rounded-md top-1/10">
           {/* TITLE */}
           <div className="w-full rounded-t-md px-4 py-2 text-xl bg-slate-300">Editor de expressão</div>
@@ -67,8 +67,8 @@ export function ExpressionModal({
           <div className="w-full px-4 py-4 items-center gap-1 ">
             <div className="flex gap-4 items-center pb-4 font-medium text-lg">
               <div className="flex items-center">
-                <img className="w-10" src={selectedCondition?.icon} />
-                <span>{selectedCondition?.name}</span>
+                <img className="w-10" src={selectedAction.icon} />
+                <span>{selectedAction.name}</span>
               </div>
               <select
                 className="bg-slate-900 py-1 px-2 text-white outline-0 rounded-sm text-sm"

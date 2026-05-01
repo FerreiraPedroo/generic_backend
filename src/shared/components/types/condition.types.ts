@@ -8,5 +8,5 @@ export type Condition = {
   operator: string | null;
   params: [string] | null;
   expressions: [Expression] | string | null;
-  actions: Action[];
+  actions: Action[] | [];
 };
