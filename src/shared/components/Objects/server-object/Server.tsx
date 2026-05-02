@@ -15,16 +15,16 @@ export function Conditions({
   handleAddCondition: (condition: Condition) => void;
 }) {
   return (
-    <div className={`w-20 relative`}>
+    <div className={`min-w-40 relative`}>
       <div
-        className="absolute top-6 z-10 bg-blue-100 border border-gray-400 shadow p-1 rounded-md"
+        className="min-w-40 absolute top-6 z-10 bg-blue-100 border border-gray-400 shadow p-1 rounded-md"
         onMouseLeave={() => setIsOpenMenu(false)}
       >
         {serverConditions.map((condition: Condition) => (
           <div
             key={condition.name}
             onClick={() => handleAddCondition(condition)}
-            className="w-30 px-2 py-1 hover:bg-blue-600 hover:text-white hover:border-blue-300 cursor-pointer text-sm rounded-sm"
+            className="min-w-40 px-2 py-1 hover:bg-blue-600 hover:text-white hover:border-blue-300 cursor-pointer text-sm rounded-sm"
           >
             {condition.name}
           </div>

@@ -197,6 +197,7 @@ function App() {
           <span className="text-slate-600">All the objects</span>
         </div>
 
+        {/* ROUTES */}
         <div>
           {routes.map((route, idx) => (
             <div key={idx}>
@@ -207,8 +208,9 @@ function App() {
                   <div className="flex items-center pl-2 py-1 select-none text-white font-bold">
                     <span>ROUTE</span>
                   </div>
-                  <div className="flex gap-2 justify-center items-center px-2 py-1 select-none text-white font-bold text-lg">
+                  <div className="flex gap-1 justify-center items-center px-2 py-1 select-none text-white font-bold text-lg">
                     <img src={route.icon} className="w-8 h-8 border border-gray-400 bg-gray-300" />
+                    <span>{route.method.toUpperCase()}</span>
                     <span>{route.url}</span>
                   </div>
                 </div>
@@ -236,6 +238,7 @@ function App() {
           ))}
         </div>
 
+        {/* ADD ROUTES */}
         <div
           onClick={() => handleRoute(true)}
           className="px-2 py-1 cursor-pointer hover:bg-gray-300 border-t border-gray-300"
@@ -244,6 +247,7 @@ function App() {
         </div>
       </div>
 
+      {/* OBJECTS */}
       <div className="bg-white">
         <div className="min-w-20 min-h-14 max-h-14">
           {objects.map((obj) => (
@@ -272,7 +276,9 @@ function App() {
                         }}
                         className="h-14 flex flex-col justify-center items-center bg-white border border-slate-400 border-t-transparent cursor-pointer"
                       >
-                        {route.actions.length ? `✓ ${route.actions.length} actions` : ""}
+                        <div className="absolute text-center min-w-full">
+                          {route.actions.length ? `✓ ${route.actions.length} actions` : ""}
+                        </div>
 
                         {/* DROPDOWN ACTIONS */}
                         {actionMenu &&
@@ -294,7 +300,7 @@ function App() {
                           showCellActions.routeId == route.id &&
                           showCellActions.conditionId == null && (
                             <div
-                              className={`absolute top-12 min-w-80 border-2 border-slate-500 bg-slate-200 rounded-md`}
+                              className={`z-10 relative top-8 left-44 min-w-80 border-2 border-slate-500 bg-slate-200 rounded-md`}
                             >
                               <ActionsInCell actions={route.actions} />
                             </div>
@@ -332,7 +338,9 @@ function App() {
                           }}
                           className="h-12 flex flex-col justify-center items-center bg-white border border-slate-400 border-t-transparent cursor-pointer"
                         >
-                          {condition.actions.length ? `✓ ${condition.actions.length} actions` : ""}
+                          <div className="absolute text-center min-w-full">
+                            {condition.actions.length ? `✓ ${condition.actions.length} actions` : ""}
+                          </div>
 
                           {/* DROPDOWN ACTIONS */}
                           {actionMenu &&
@@ -348,13 +356,13 @@ function App() {
                           {/* ACTIONS LIST IN CELL */}
                           {showCellActions &&
                             showCellActions.type == "CONDITION" &&
-                            condition.actions.length &&
+                            condition.actions.length > 0 &&
                             actionMenu == null &&
                             obj.id == showCellActions.objectId &&
                             showCellActions.routeId == route.id &&
                             showCellActions.conditionId == condition.id && (
                               <div
-                                className={`absolute top-22 min-w-80 border-2 border-slate-500 bg-slate-200 rounded-md`}
+                                className={`z-10 relative top-8 left-44 min-w-80 border-2 border-slate-500 bg-slate-200 rounded-md`}
                               >
                                 <ActionsInCell actions={condition.actions} />
                               </div>

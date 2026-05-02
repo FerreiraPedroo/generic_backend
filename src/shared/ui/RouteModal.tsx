@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import type { Route, RouteWithoutId } from "../components/types/routes.types";
+import expressImg from "../../assets/img/objects/express.png";
+import type { RouteWithoutId } from "../components/types/routes.types";
 
 export function RouteModal({
   setShow,
@@ -9,6 +10,7 @@ export function RouteModal({
   addRoute: (route: RouteWithoutId) => void;
 }) {
   const [route, setRoute] = useState<string>("");
+  const [method, setMethod] = useState<string>("get");
   const [params, setParams] = useState<string[]>([]);
   const [queries, setQueries] = useState<{ key: string; value: string }[]>([]);
   const [status, setStatus] = useState<string>("ERROR");
@@ -102,7 +104,8 @@ export function RouteModal({
   function handleConfirm() {
     addRoute({
       url: route,
-      icon: "",
+      icon: expressImg,
+      method,
       params,
       queries,
       actions: [],
@@ -132,9 +135,25 @@ export function RouteModal({
             {/* <span className="bg-yellow-300  text-xs px-2 py-1 rounded-full hover:cursor-pointer">?</span> */}
           </div>
 
-          <div className="flex justify-end align-center">
+          <div className="flex flex-wrap justify-between align-center gap-4">
+            <div className="flex gap-4 items-center font-medium text-lg">
+              <div className="min-w-22 flex items-center">
+                {/* <img className="w-10" src={selectedCondition?.icon} /> */}
+                <span>Method</span>
+              </div>
+              <select
+                className="bg-slate-900 py-1 px-2 text-white outline-0 rounded-sm text-sm"
+                onChange={(e) => setMethod(e.target.value)}
+              >
+                <option value="get">GET</option>
+                <option value="post">POST</option>
+                <option value="put">PUT</option>
+                <option value="delete">DELETE</option>
+              </select>
+            </div>
+
             <div
-              className={`text-center justify-end min-w-50 border-2 border-t-neutral-500 border-l-neutral-500 border-b-neutral-300 border-r-neutral-300 font-medium uppercase ${status == "ERROR" && "bg-red-500  text-red-100"} ${status == "OK" && "bg-green-500 text-green-950 "}`}
+              className={`text-center w-40 border-2 border-t-neutral-500 border-l-neutral-500 border-b-neutral-300 border-r-neutral-300 font-medium uppercase ${status == "ERROR" && "bg-red-500  text-red-100"} ${status == "OK" && "bg-green-500 text-green-950 "}`}
             >
               {status}
             </div>
