@@ -13,7 +13,7 @@ export const serverActions: Action[] = [
   },
   {
     id: 200201,
-    name: "GET SERVER PORT 123 456787 987 8789789",
+    name: "GET SERVER PORT",
     type: "number",
     icon: icons.server,
     operator: null,

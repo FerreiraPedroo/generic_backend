@@ -2,7 +2,7 @@ import { icons } from "../../../../assets/img";
 import { Actions, Conditions, Expressions, Server } from "./Server";
 
 export const serverObject = {
-  id: 1,
+  id: 2,
   name: "SERVER",
   icon: icons.server,
   object: Server,

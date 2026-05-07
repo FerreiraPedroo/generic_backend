@@ -1,15 +1,13 @@
 import type { Action } from "./actions.types";
-import type { Condition } from "./condition.types";
+import type { ConditionGroup } from "./condition.types";
 
 export type Route = {
-  id: number;
   url: string;
   method: string;
   icon: string;
   params: string[];
   queries?: { key: string; value: string }[];
   actions: Action[];
-  conditions: Condition[];
+  conditionsGroup: ConditionGroup[];
 };
-
 export type RouteWithoutId = Omit<Route, "id">;

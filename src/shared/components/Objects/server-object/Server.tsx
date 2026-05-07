@@ -60,13 +60,13 @@ export function Expressions({
 }
 
 export function Actions({
-  routeId,
-  conditionId,
+  routeUrl,
+  conditionIndex,
   addAction,
 }: {
-  routeId: number;
-  conditionId: number | null;
-  addAction: (routeId: number, conditionId: number | null, action: Action) => void;
+  routeUrl: string;
+  conditionIndex: number | null;
+  addAction: (routeUrl: string, conditionIndex: number | null, action: Action) => void;
 }) {
   return (
     <div className="z-10 bg-slate-200 shadow">
@@ -74,7 +74,7 @@ export function Actions({
       {serverActions.map((action: Action) => (
         <div
           key={action.name}
-          onClick={() => addAction(routeId, conditionId, action)}
+          onClick={() => addAction(routeUrl, conditionIndex, action)}
           className="px-2 py-1 hover:bg-blue-500 hover:text-white cursor-pointer text-xs"
         >
           {action.name}
@@ -105,7 +105,7 @@ export function Server({
   };
 
   return (
-    <div className="w-20 relative">
+    <div key={"server"} className="w-20 relative">
       {/* SELECT */}
       <div
         onClick={() => setIsOpenMenu((prev) => !prev)}

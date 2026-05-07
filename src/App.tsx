@@ -3,11 +3,11 @@ import { useState } from "react";
 import "./App.css";
 
 import type { Route, RouteWithoutId } from "./shared/components/types/routes.types";
-import type { Condition } from "./shared/components/types/condition.types";
+import type { Condition, ConditionGroup } from "./shared/components/types/condition.types";
 import type { Expression } from "./shared/components/types/expression.types";
 import type { Action } from "./shared/components/types/actions.types";
 
-import { ConditionRow } from "./modules/condition/condition-row";
+import { ConditionsRow } from "./modules/condition/conditions-row";
 import { ConditionModal } from "./shared/ui/ConditionModal";
 import { ExpressionModal } from "./shared/ui/ExpressionModal";
 import { Actions } from "./shared/components/Objects/server-object/Server";
@@ -16,59 +16,98 @@ import { ActionExpressionModal } from "./shared/ui/ActionExpressionModal";
 
 import { RouteModal } from "./shared/ui/RouteModal";
 import { objectsList } from "./shared/components/Objects/indexObject";
+import { actionClass } from "./shared/utils/classBuild";
 
-type CellActions = { objectId: number; routeId: number; conditionId: number | null; type: string };
+type CellActions = { objectId: number; routeUrl: string; conditionIndex: number | null; type: string };
+type RouteCondition = { routeUrl: string; conditionIndex: number | null };
 
 function App() {
   //////////////////////////////////////////////////////////////////////////////
   // ROUTES ///////////////////////////////////////////////////////////////////
   const [routes, setRoutes] = useState<Route[]>([]);
-  const [routeUrlSelected, setRouteUrlSelected] = useState<string>("");
+  const [routeConditionSelected, setRouteConditionSelected] = useState<RouteCondition>({
+    routeUrl: "",
+    conditionIndex: null,
+  });
   const [showRouteModal, setShowRouteModal] = useState(false);
 
   function handleRoute(show: boolean) {
     setShowRouteModal(show);
   }
   function addRoute(route: RouteWithoutId) {
-    const newRoute = structuredClone(routes);
-    const id = newRoute[newRoute.length - 1]?.id ?? 0;
+    const routesClone = structuredClone(routes);
+    /**
+     * Aqui vai ter o O(n2)
+     */
+    /**
+     * 
+     * 
+     * 
+     * 
+     * 
+     * 
+     * 
+     * 
+     * 
+     * 
+     * 
+     * 
+     * 
+     * 
+     */
 
-    newRoute.push({ ...route, id: id + 1 });
+    const routeUrl = route.url.split("/");
 
-    setRoutes(newRoute);
+    routesClone.forEach((routeClone) => {
+      const routeCloneUrl = routeClone.url.split("/");
+
+      const routeCompare = routeCloneUrl.every((value, index) => {
+        console.log(value, routeUrl[index]);
+        if (value == routeUrl[index]) {
+          return true;
+        }
+        console.log(value.startsWith(":"), routeUrl[index].startsWith(":"));
+        if (value.startsWith(":") && routeUrl[index].startsWith(":")) {
+          return true;
+        }
+      });
+    });
+
+    // newRoutes.push({ ...route });
+    // setRoutes(newRoutes);
   }
-  function addRouteCondition(routeUrl: string, condition: Condition) {
+  function addRouteCondition(routeCondition: RouteCondition, condition: Condition) {
     let newRoutes = structuredClone(routes);
 
     newRoutes = newRoutes.map((route: Route) => {
-      if (route.url === routeUrl) {
-        const id = route.conditions[route.conditions.length - 1]?.id ?? 0;
-        route.conditions.push({ ...condition, id: id + 1 });
-        return { ...route };
+      if (route.url === routeCondition.routeUrl) {
+        if (routeCondition.conditionIndex === null) {
+          route.conditionsGroup.push({
+            conditions: [{ ...condition }],
+            actions: [],
+          });
+        } else {
+          route.conditionsGroup[routeCondition.conditionIndex].conditions.push({ ...condition });
+        }
       }
       return route;
     });
 
     setRoutes(newRoutes);
     setSelectedCondition(null);
-    setRouteUrlSelected("");
+    setRouteConditionSelected({ routeUrl: "", conditionIndex: null });
     setShowExpression(false);
     setShowCondition(false);
   }
-  function addRouteAction(routeId: number, conditionId: number | null, action: Action) {
+  function addRouteAction(routeUrl: string, conditionIndex: number | null, action: Action) {
     const routesCopy = structuredClone(routes);
 
     const newRoutes = routesCopy.map((route: Route) => {
-      if (routeId == route.id) {
-        if (conditionId) {
-          route.conditions = route.conditions.map((condition: Condition) => {
-            if (condition.id == conditionId) {
-              condition.actions.push({ ...action });
-            }
-            return condition;
-          });
-        } else {
+      if (routeUrl == route.url) {
+        if (conditionIndex == null) {
           route.actions.push({ ...action });
+        } else {
+          route.conditionsGroup[conditionIndex].actions.push({ ...action });
         }
       }
       return route;
@@ -77,18 +116,24 @@ function App() {
     setRoutes(newRoutes);
 
     setSelectedCondition(null);
-    setRouteUrlSelected("");
+    setRouteConditionSelected({ routeUrl: "", conditionIndex: null });
     setShowExpression(false);
     setShowCondition(false);
   }
-  function removeRouteCondition(routeId: number, conditionId: number) {
+  function removeRouteCondition(routeUrl: string, conditionsIndex: number, conditionId: number) {
     let newRoutes = structuredClone(routes);
 
     newRoutes = newRoutes.map((route: Route) => {
-      if (route.id === routeId) {
-        route.conditions = route.conditions.filter((cond) => cond.id !== conditionId);
-        return { ...route };
+      if (route.url === routeUrl) {
+        route.conditionsGroup[conditionsIndex].conditions = route.conditionsGroup[conditionsIndex].conditions.filter(
+          (condition: Condition) => condition.id !== conditionId,
+        );
+
+        if (!route.conditionsGroup[conditionsIndex].conditions.length) {
+          route.conditionsGroup = route.conditionsGroup.filter((conditions) => conditions.conditions.length);
+        }
       }
+
       return route;
     });
 
@@ -100,9 +145,9 @@ function App() {
   const [selectedCondition, setSelectedCondition] = useState<Condition | null>(null);
   const [showCondition, setShowCondition] = useState(false);
 
-  function newConditionModal(status: boolean, route: string) {
-    setRouteUrlSelected(route);
-    setShowCondition(status);
+  function conditionModal(routeUrl: string, conditionIndex: number | null) {
+    setRouteConditionSelected({ routeUrl, conditionIndex });
+    setShowCondition(true);
   }
   function handleCondition(status: boolean) {
     setShowCondition(status);
@@ -112,9 +157,29 @@ function App() {
       setSelectedCondition(condition);
       handleExpression(true);
     } else {
-      addRouteCondition(routeUrlSelected, condition);
+      addRouteCondition(routeConditionSelected, condition);
       handleCondition(false);
     }
+  }
+  function negateCondition(routeIndex: number, conditionsGroupIndex: number, conditionIndex: number) {
+    let newRoutes = structuredClone(routes);
+
+    newRoutes = newRoutes.map((route: Route, index: number) => {
+      if (routeIndex == index) {
+        route.conditionsGroup[conditionsGroupIndex].conditions = route.conditionsGroup[
+          conditionsGroupIndex
+        ].conditions.map((condition: Condition, index) => {
+          if (conditionIndex == index) {
+            condition.not = !condition.not;
+          }
+          return condition;
+        });
+      }
+
+      return route;
+    });
+
+    setRoutes(newRoutes);
   }
 
   ///////////////////////////////////////////////////////////////////////////////
@@ -124,22 +189,22 @@ function App() {
   function addExpressionToCondition(operator: string, expression: Expression | string) {
     if (selectedCondition) {
       if (typeof expression == "string") {
-        addRouteCondition(routeUrlSelected, { ...selectedCondition, operator, expressions: expression });
+        addRouteCondition(routeConditionSelected, { ...selectedCondition, operator, expressions: expression });
       } else {
-        addRouteCondition(routeUrlSelected, { ...selectedCondition, operator, expressions: [{ ...expression }] });
+        addRouteCondition(routeConditionSelected, { ...selectedCondition, operator, expressions: [{ ...expression }] });
       }
     }
   }
   function addExpressionToAction(operator: string, expression: Expression | string) {
     if (selectedAction) {
       if (typeof expression == "string") {
-        addRouteAction(selectedAction.routeId, selectedAction.conditionId, {
+        addRouteAction(selectedAction.routeUrl, selectedAction.conditionIndex, {
           ...selectedAction.action,
           operator,
           expressions: expression,
         });
       } else {
-        addRouteAction(selectedAction.routeId, selectedAction.conditionId, {
+        addRouteAction(selectedAction.routeUrl, selectedAction.conditionIndex, {
           ...selectedAction.action,
           operator,
           expressions: [{ ...expression }],
@@ -160,8 +225,8 @@ function App() {
   const [actionMenu, setActionMenu] = useState<CellActions | null>(null);
 
   const [selectedAction, setSelectedAction] = useState<{
-    routeId: number;
-    conditionId: number | null;
+    routeUrl: string;
+    conditionIndex: number | null;
     action: Action;
   } | null>(null);
 
@@ -177,31 +242,31 @@ function App() {
     setActionMenu(null);
     setSelectedAction(null);
   }
-
-  function addAction(routeId: number, conditionId: number | null, action: Action) {
+  function addAction(routeUrl: string, conditionIndex: number | null, action: Action) {
     if (action.params?.length) {
-      setSelectedAction({ routeId, conditionId, action });
+      setSelectedAction({ routeUrl, conditionIndex, action });
       setShowActionExpression(true);
     } else {
-      addRouteAction(routeId, conditionId, action);
+      addRouteAction(routeUrl, conditionIndex, action);
       handleAction();
     }
   }
 
   return (
     <div className="w-full flex max-w-3xl bg-slate-200 text-sm font-sans">
+      {/* HEADER / ROUTES / CONDITIONS */}
       <div className="w-full">
         {/* HEADER */}
-        <div className="min-h-14 flex flex-col items-center bg-slate-300 px-2 py-1 border-b border-slate-400">
+        <div className="min-h-14 max-h-14 flex flex-col items-center bg-slate-300 px-2 py-1 border border-slate-400">
           <span className="font-semibold">All the events</span>
           <span className="text-slate-600">All the objects</span>
         </div>
 
-        {/* ROUTES */}
+        {/* ROUTES / CONDITIONS */}
         <div>
           {routes.map((route, idx) => (
             <div key={idx}>
-              <div className="min-h-14  flex items-center border-t bg-slate-400 border-slate-300 px-2 py-1">
+              <div className="max-h-14 min-h-14 flex items-center bg-slate-500 border-b border-b-slate-400 px-2 py-1">
                 <div className="px-2 text-gray-600">{idx + 1}</div>
                 <div className="min-w-4 text-center">•</div>
                 <div className="flex-1 flex items-center gap-1">
@@ -216,21 +281,23 @@ function App() {
                 </div>
               </div>
 
-              {route.conditions.map((cond, index) => (
-                <ConditionRow
-                  key={`${route.url}/${cond.id}/${index}`}
-                  conditionIndex={index}
-                  routeId={route.id}
+              {route.conditionsGroup.map((conditionGroup, index) => (
+                <ConditionsRow
+                  key={`${route.url}/${index}`}
                   routeIndex={idx}
-                  condition={cond}
+                  routeUrl={route.url}
+                  conditionGroup={conditionGroup}
+                  conditionsGroupIndex={index}
                   // updateCondition={updateCondition}
                   removeCondition={removeRouteCondition}
+                  conditionModal={conditionModal}
+                  negateCondition={negateCondition}
                 />
               ))}
 
               <div
-                onClick={() => newConditionModal(true, route.url)}
-                className="pl-14 py-3 cursor-pointer hover:bg-gray-300 border-t border-gray-300"
+                onClick={() => conditionModal(route.url, null)}
+                className="min-h-10 max-h-10 pl-14 pt-2 cursor-pointer hover:bg-gray-300 border-b border-b-slate-400"
               >
                 + New condition
               </div>
@@ -241,64 +308,75 @@ function App() {
         {/* ADD ROUTES */}
         <div
           onClick={() => handleRoute(true)}
-          className="px-2 py-1 cursor-pointer hover:bg-gray-300 border-t border-gray-300"
+          className="min-h-10 max-h-10 px-2 py-2 cursor-pointer hover:bg-gray-300 border-b border-b-slate-400"
         >
           + New Route
         </div>
       </div>
 
-      {/* OBJECTS */}
+      {/* ACTIONS: SHOW OBJECTS LIST / CONDITION ACTION LIST */}
       <div className="bg-white">
-        <div className="min-w-20 min-h-14 max-h-14">
+        <div className="min-w-20 min-h-14 max-h-14 ">
           {objects.map((obj) => (
-            <div key={obj.name} className="w-20">
-              <div key={obj.name} className="w-20 relative">
+            <div key={obj.name} className="h-14 w-20">
+              {/* OBJECT ICON */}
+              <div key={obj.name} className="h-14 w-20 relative">
                 <div className="h-14  flex flex-col justify-center items-center bg-gray-300 border border-slate-400">
                   <img src={obj.icon} className="min-w-8 min-h-8" />
                   {obj.name}
                 </div>
               </div>
-
+              {/* ACTIONS IN CONDITIONS */}
               <div className="min-w-20 min-h-14 max-h-14">
                 <div className="w-20 relative">
-                  {routes.map((route) => (
-                    <div key={route.id}>
+                  {routes.map((route, index) => (
+                    <div key={`${route.url}/${index}`}>
                       <div
                         onAuxClick={() =>
-                          handleActionMenu({ objectId: obj.id, routeId: route.id, conditionId: null, type: "ROUTE" })
+                          handleActionMenu({
+                            objectId: obj.id,
+                            routeUrl: route.url,
+                            conditionIndex: null,
+                            type: "ROUTE",
+                          })
                         }
                         onMouseEnter={() =>
-                          handleActionHover({ objectId: obj.id, routeId: route.id, conditionId: null, type: "ROUTE" })
+                          handleActionHover({
+                            objectId: obj.id,
+                            routeUrl: route.url,
+                            conditionIndex: null,
+                            type: "ROUTE",
+                          })
                         }
                         onMouseLeave={() => {
                           handleActionHover(null);
                           handleActionMenu(null);
                         }}
-                        className="h-14 flex flex-col justify-center items-center bg-white border border-slate-400 border-t-transparent cursor-pointer"
+                        className="h-14 flex flex-col justify-center items-center bg-white border border-slate-400 border-t-0 cursor-pointer "
                       >
                         <div className="absolute text-center min-w-full">
                           {route.actions.length ? `✓ ${route.actions.length} actions` : ""}
                         </div>
 
-                        {/* DROPDOWN ACTIONS */}
+                        {/* ROUTE: SHOW DROPDOWN ACTIONS */}
                         {actionMenu &&
                           actionMenu.type == "ROUTE" &&
                           obj.id == actionMenu.objectId &&
-                          actionMenu.routeId == route.id &&
-                          actionMenu.conditionId == null && (
+                          actionMenu.routeUrl == route.url &&
+                          actionMenu.conditionIndex == null && (
                             <div className={`relative w-60 border border-slate-600 bg-slate-200 p-2 rounded-md`}>
-                              <Actions routeId={route.id} conditionId={null} addAction={addAction} />
+                              <Actions routeUrl={route.url} conditionIndex={null} addAction={addAction} />
                             </div>
                           )}
 
-                        {/* ACTIONS LIST IN CELL */}
+                        {/* ROUTE: SHOW ACTIONS LIST IN CELL */}
                         {showCellActions &&
                           showCellActions.type == "ROUTE" &&
                           route.actions.length != 0 &&
                           actionMenu == null &&
                           obj.id == showCellActions.objectId &&
-                          showCellActions.routeId == route.id &&
-                          showCellActions.conditionId == null && (
+                          showCellActions.routeUrl == route.url &&
+                          showCellActions.conditionIndex == null && (
                             <div
                               className={`z-10 relative top-8 left-44 min-w-80 border-2 border-slate-500 bg-slate-200 rounded-md`}
                             >
@@ -307,28 +385,22 @@ function App() {
                           )}
                       </div>
 
-                      {route.conditions.length == 0 && (
-                        <div className="h-12 flex flex-col justify-center items-center bg-white border border-slate-400 border-t-transparent text-stone-200 text-4xl pb-2">
-                          ⊘
-                        </div>
-                      )}
-
-                      {route.conditions.map((condition) => (
+                      {route.conditionsGroup.map((conditionGroup, index) => (
                         <div
-                          key={`${route.id}/${condition.id}`}
+                          key={`${route.url}/${index}`}
                           onAuxClick={() =>
                             handleActionMenu({
                               objectId: obj.id,
-                              routeId: route.id,
-                              conditionId: condition.id,
+                              routeUrl: route.url,
+                              conditionIndex: index,
                               type: "CONDITION",
                             })
                           }
                           onMouseEnter={() =>
                             handleActionHover({
                               objectId: obj.id,
-                              routeId: route.id,
-                              conditionId: condition.id,
+                              routeUrl: route.url,
+                              conditionIndex: index,
                               type: "CONDITION",
                             })
                           }
@@ -336,47 +408,50 @@ function App() {
                             handleActionHover(null);
                             handleActionMenu(null);
                           }}
-                          className="h-12 flex flex-col justify-center items-center bg-white border border-slate-400 border-t-transparent cursor-pointer"
+                          className={`flex flex-col justify-center items-center bg-white border border-slate-400 border-t-0 cursor-pointer py-2 ${
+                            actionClass[conditionGroup.conditions!.length.toString()]
+                          }`}
                         >
                           <div className="absolute text-center min-w-full">
-                            {condition.actions.length ? `✓ ${condition.actions.length} actions` : ""}
+                            {conditionGroup.actions.length ? `✓ ${conditionGroup.actions.length} actions` : ""}
                           </div>
 
-                          {/* DROPDOWN ACTIONS */}
+                          {/* CONDITION: SHOW DROPDOWN ACTIONS */}
                           {actionMenu &&
                             actionMenu.type == "CONDITION" &&
                             obj.id == actionMenu.objectId &&
-                            actionMenu.routeId == route.id &&
-                            actionMenu.conditionId == condition.id && (
+                            actionMenu.routeUrl == route.url &&
+                            actionMenu.conditionIndex == index && (
                               <div className={`relative w-60 border border-slate-600 bg-slate-200 p-2 rounded-md`}>
-                                <Actions routeId={route.id} conditionId={condition.id} addAction={addAction} />
+                                <Actions routeUrl={route.url} conditionIndex={index} addAction={addAction} />
                               </div>
                             )}
 
-                          {/* ACTIONS LIST IN CELL */}
+                          {/* CONDITION: SHOW ACTIONS LIST IN CELL */}
                           {showCellActions &&
                             showCellActions.type == "CONDITION" &&
-                            condition.actions.length > 0 &&
+                            conditionGroup.actions.length > 0 &&
                             actionMenu == null &&
                             obj.id == showCellActions.objectId &&
-                            showCellActions.routeId == route.id &&
-                            showCellActions.conditionId == condition.id && (
+                            showCellActions.routeUrl == route.url &&
+                            showCellActions.conditionIndex == index && (
                               <div
                                 className={`z-10 relative top-8 left-44 min-w-80 border-2 border-slate-500 bg-slate-200 rounded-md`}
                               >
-                                <ActionsInCell actions={condition.actions} />
+                                <ActionsInCell actions={conditionGroup.actions} />
                               </div>
                             )}
                         </div>
                       ))}
 
-                      {route.conditions.length >= 1 && (
-                        <div className="h-12 flex flex-col justify-center items-center bg-white border border-slate-400 border-t-transparent text-stone-200 text-4xl pb-2">
-                          ⊘
-                        </div>
-                      )}
+                      <div className="min-h-10 max-h-10 flex flex-col justify-center items-center bg-white-200 border border-slate-400 border-t-0 text-stone-200 text-4xl pb-2">
+                        ⊘
+                      </div>
                     </div>
                   ))}
+                  <div className="min-h-10 max-h-10 flex flex-col justify-center items-center bg-white-200 border border-slate-400 border-t-0 text-stone-200 text-4xl pb-2">
+                    ⊘
+                  </div>
                 </div>
               </div>
             </div>
@@ -384,6 +459,7 @@ function App() {
         </div>
       </div>
 
+      {/* MODALS */}
       {showRouteModal && <RouteModal addRoute={addRoute} setShow={handleRoute} />}
       {showCondition && <ConditionModal addCondition={addCondition} setShow={handleCondition} />}
       {showExpression && (

@@ -109,7 +109,7 @@ export function RouteModal({
       params,
       queries,
       actions: [],
-      conditions: [],
+      conditionsGroup: [],
     });
     setShow(false);
   }

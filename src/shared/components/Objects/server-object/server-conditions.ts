@@ -3,7 +3,7 @@ import type { Condition } from "../../types/condition.types";
 
 export const serverConditions: Condition[] = [
   {
-    id: 100100,
+    id: 200100,
     name: "SERVER IS UP",
     functionName: "SERVER_IS_UP",
     icon: icons.server,
@@ -11,10 +11,9 @@ export const serverConditions: Condition[] = [
     params: null,
     operator: null,
     expressions: null,
-    actions: [],
   },
   {
-    id: 100101,
+    id: 200101,
     name: "SERVER PORT NUMBER",
     functionName: "SERVER_PORT_NUMBER",
     icon: icons.server,
@@ -22,10 +21,9 @@ export const serverConditions: Condition[] = [
     params: ["number"],
     operator: null,
     expressions: null,
-    actions: [],
   },
   {
-    id: 100102,
+    id: 200102,
     name: "HEADER AUTHENTICATION IS PRESENT",
     functionName: "SERVER_HEADER_AUTHENTICATION",
     icon: icons.server,
@@ -33,6 +31,5 @@ export const serverConditions: Condition[] = [
     params: null,
     operator: null,
     expressions: null,
-    actions: [],
   },
 ];
