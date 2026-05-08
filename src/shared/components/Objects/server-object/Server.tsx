@@ -61,10 +61,12 @@ export function Expressions({
 
 export function Actions({
   routeUrl,
+  routeMethod,
   conditionIndex,
   addAction,
 }: {
   routeUrl: string;
+  routeMethod: string;
   conditionIndex: number | null;
   addAction: (routeUrl: string, conditionIndex: number | null, action: Action) => void;
 }) {
@@ -74,7 +76,7 @@ export function Actions({
       {serverActions.map((action: Action) => (
         <div
           key={action.name}
-          onClick={() => addAction(routeUrl, conditionIndex, action)}
+          onClick={() => addAction(routeUrl, routeMethod, conditionIndex, action)}
           className="px-2 py-1 hover:bg-blue-500 hover:text-white cursor-pointer text-xs"
         >
           {action.name}

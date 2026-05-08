@@ -112,7 +112,7 @@ export function ConditionsRow({
                 onClick={handleNewCondition}
                 className="min-w-40 px-2 py-1 hover:bg-blue-600 hover:text-white hover:border-blue-300 cursor-pointer text-sm rounded-sm"
               >
-                + New condtion
+                + Add condtion
               </div>
             </div>
           </div>

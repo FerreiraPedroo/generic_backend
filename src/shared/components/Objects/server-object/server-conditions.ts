@@ -24,11 +24,11 @@ export const serverConditions: Condition[] = [
   },
   {
     id: 200102,
-    name: "HEADER AUTHENTICATION IS PRESENT",
+    name: "HEADER AUTHENTICATION <Bearer>",
     functionName: "SERVER_HEADER_AUTHENTICATION",
     icon: icons.server,
     not: false,
-    params: null,
+    params: ["string"],
     operator: null,
     expressions: null,
   },

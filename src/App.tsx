@@ -18,7 +18,13 @@ import { RouteModal } from "./shared/ui/RouteModal";
 import { objectsList } from "./shared/components/Objects/indexObject";
 import { actionClass } from "./shared/utils/classBuild";
 
-type CellActions = { objectId: number; routeUrl: string; conditionIndex: number | null; type: string };
+type CellActions = {
+  objectId: number;
+  routeUrl: string;
+  routeMethod: string;
+  conditionIndex: number | null;
+  type: string;
+};
 type RouteCondition = { routeUrl: string; conditionIndex: number | null };
 
 function App() {
@@ -36,45 +42,38 @@ function App() {
   }
   function addRoute(route: RouteWithoutId) {
     const routesClone = structuredClone(routes);
-    /**
-     * Aqui vai ter o O(n2)
-     */
-    /**
-     * 
-     * 
-     * 
-     * 
-     * 
-     * 
-     * 
-     * 
-     * 
-     * 
-     * 
-     * 
-     * 
-     * 
-     */
 
     const routeUrl = route.url.split("/");
-
-    routesClone.forEach((routeClone) => {
+    /**
+     * BIG O(n²)
+     */
+    for (const routeClone of routesClone) {
       const routeCloneUrl = routeClone.url.split("/");
 
-      const routeCompare = routeCloneUrl.every((value, index) => {
-        console.log(value, routeUrl[index]);
-        if (value == routeUrl[index]) {
-          return true;
-        }
-        console.log(value.startsWith(":"), routeUrl[index].startsWith(":"));
-        if (value.startsWith(":") && routeUrl[index].startsWith(":")) {
-          return true;
-        }
-      });
-    });
+      let urlEquals = 0;
 
-    // newRoutes.push({ ...route });
-    // setRoutes(newRoutes);
+      routeCloneUrl.forEach((value, index) => {
+        if (value === routeUrl[index]) {
+          urlEquals++;
+          return true;
+        }
+
+        if (value.startsWith(":") && routeUrl[index].startsWith(":")) {
+          urlEquals++;
+          return true;
+        }
+
+        return true;
+      });
+
+      if (routeCloneUrl.length == urlEquals && routeClone.method == route.method) {
+        console.log("ROTA EXISTENTE");
+        return;
+      }
+    }
+
+    routesClone.push({ ...route });
+    setRoutes(routesClone);
   }
   function addRouteCondition(routeCondition: RouteCondition, condition: Condition) {
     let newRoutes = structuredClone(routes);
@@ -99,11 +98,11 @@ function App() {
     setShowExpression(false);
     setShowCondition(false);
   }
-  function addRouteAction(routeUrl: string, conditionIndex: number | null, action: Action) {
+  function addRouteAction(routeUrl: string, routeMethod: string, conditionIndex: number | null, action: Action) {
     const routesCopy = structuredClone(routes);
 
     const newRoutes = routesCopy.map((route: Route) => {
-      if (routeUrl == route.url) {
+      if (routeUrl == route.url && routeMethod == route.method) {
         if (conditionIndex == null) {
           route.actions.push({ ...action });
         } else {
@@ -198,13 +197,13 @@ function App() {
   function addExpressionToAction(operator: string, expression: Expression | string) {
     if (selectedAction) {
       if (typeof expression == "string") {
-        addRouteAction(selectedAction.routeUrl, selectedAction.conditionIndex, {
+        addRouteAction(selectedAction.routeUrl, selectedAction.routeMethod, selectedAction.conditionIndex, {
           ...selectedAction.action,
           operator,
           expressions: expression,
         });
       } else {
-        addRouteAction(selectedAction.routeUrl, selectedAction.conditionIndex, {
+        addRouteAction(selectedAction.routeUrl, selectedAction.routeMethod, selectedAction.conditionIndex, {
           ...selectedAction.action,
           operator,
           expressions: [{ ...expression }],
@@ -226,6 +225,7 @@ function App() {
 
   const [selectedAction, setSelectedAction] = useState<{
     routeUrl: string;
+    routeMethod: string;
     conditionIndex: number | null;
     action: Action;
   } | null>(null);
@@ -242,12 +242,12 @@ function App() {
     setActionMenu(null);
     setSelectedAction(null);
   }
-  function addAction(routeUrl: string, conditionIndex: number | null, action: Action) {
+  function addAction(routeUrl: string, routeMethod: string, conditionIndex: number | null, action: Action) {
     if (action.params?.length) {
-      setSelectedAction({ routeUrl, conditionIndex, action });
+      setSelectedAction({ routeUrl, routeMethod, conditionIndex, action });
       setShowActionExpression(true);
     } else {
-      addRouteAction(routeUrl, conditionIndex, action);
+      addRouteAction(routeUrl, routeMethod, conditionIndex, action);
       handleAction();
     }
   }
@@ -336,6 +336,7 @@ function App() {
                           handleActionMenu({
                             objectId: obj.id,
                             routeUrl: route.url,
+                            routeMethod: route.method,
                             conditionIndex: null,
                             type: "ROUTE",
                           })
@@ -344,6 +345,7 @@ function App() {
                           handleActionHover({
                             objectId: obj.id,
                             routeUrl: route.url,
+                            routeMethod: route.method,
                             conditionIndex: null,
                             type: "ROUTE",
                           })
@@ -363,9 +365,15 @@ function App() {
                           actionMenu.type == "ROUTE" &&
                           obj.id == actionMenu.objectId &&
                           actionMenu.routeUrl == route.url &&
+                          actionMenu.routeMethod == route.method &&
                           actionMenu.conditionIndex == null && (
                             <div className={`relative w-60 border border-slate-600 bg-slate-200 p-2 rounded-md`}>
-                              <Actions routeUrl={route.url} conditionIndex={null} addAction={addAction} />
+                              <Actions
+                                routeUrl={route.url}
+                                routeMethod={route.method}
+                                conditionIndex={null}
+                                addAction={addAction}
+                              />
                             </div>
                           )}
 
@@ -373,9 +381,10 @@ function App() {
                         {showCellActions &&
                           showCellActions.type == "ROUTE" &&
                           route.actions.length != 0 &&
-                          actionMenu == null &&
-                          obj.id == showCellActions.objectId &&
                           showCellActions.routeUrl == route.url &&
+                          actionMenu == null &&
+                          showCellActions.routeMethod == route.method &&
+                          obj.id == showCellActions.objectId &&
                           showCellActions.conditionIndex == null && (
                             <div
                               className={`z-10 relative top-8 left-44 min-w-80 border-2 border-slate-500 bg-slate-200 rounded-md`}
@@ -392,6 +401,7 @@ function App() {
                             handleActionMenu({
                               objectId: obj.id,
                               routeUrl: route.url,
+                              routeMethod: route.method,
                               conditionIndex: index,
                               type: "CONDITION",
                             })
@@ -400,6 +410,7 @@ function App() {
                             handleActionHover({
                               objectId: obj.id,
                               routeUrl: route.url,
+                              routeMethod: route.method,
                               conditionIndex: index,
                               type: "CONDITION",
                             })
@@ -421,6 +432,7 @@ function App() {
                             actionMenu.type == "CONDITION" &&
                             obj.id == actionMenu.objectId &&
                             actionMenu.routeUrl == route.url &&
+                            actionMenu.routeMethod == route.method &&
                             actionMenu.conditionIndex == index && (
                               <div className={`relative w-60 border border-slate-600 bg-slate-200 p-2 rounded-md`}>
                                 <Actions routeUrl={route.url} conditionIndex={index} addAction={addAction} />
@@ -434,6 +446,7 @@ function App() {
                             actionMenu == null &&
                             obj.id == showCellActions.objectId &&
                             showCellActions.routeUrl == route.url &&
+                            showCellActions.routeMethod == route.method &&
                             showCellActions.conditionIndex == index && (
                               <div
                                 className={`z-10 relative top-8 left-44 min-w-80 border-2 border-slate-500 bg-slate-200 rounded-md`}
